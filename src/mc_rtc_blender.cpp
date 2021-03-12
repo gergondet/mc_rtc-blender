@@ -5,6 +5,8 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
+#include "Client.h"
+
 namespace py = pybind11;
 
 struct ImDrawListProxy
@@ -28,13 +30,25 @@ struct ImDrawListProxy
   }
 };
 
-struct Client
+struct BlenderInterface : public Interface3D
 {
+  ~BlenderInterface() override = default;
 };
 
 PYBIND11_MODULE(mc_rtc_blender, m)
 {
     m.doc() = "mc_rtc helper for Blender plugin";
+
+    py::class_<Interface3D, BlenderInterface>(m, "Interface3D")
+      .def(py::init<>());
+
+    py::class_<Client>(m, "Client")
+      .def(py::init<Interface3D &>())
+      .def("connect", static_cast<void (Client::*)(const std::string &, const std::string &)>(&Client::connect))
+      .def("timeout", static_cast<void (Client::*)(double)>(&Client::timeout))
+      .def("update", &Client::update)
+      .def("draw2D", &Client::draw2D)
+      .def("draw3D", &Client::draw3D);
 
     m.attr("INDEX_SIZE") = sizeof(ImDrawIdx);
     m.attr("VERTEX_SIZE") = sizeof(ImDrawVert);

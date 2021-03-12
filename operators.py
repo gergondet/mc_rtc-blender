@@ -33,6 +33,10 @@ from math import cos, sin, pi
 
 # -------------------------------------------------------------------
 
+class BlenderInterface(imgui.Interface3D):
+    def __init__(self):
+        super().__init__()
+
 class ImguiExample(Operator,ImguiBasedOperator):
     """Example of modal operator using ImGui"""
     bl_idname = "object.imgui_example"
@@ -46,6 +50,10 @@ class ImguiExample(Operator,ImguiBasedOperator):
         self.dt = 0.05
         bpy.app.timers.register(self.animate_cubes)
         self.timer = bpy.context.window_manager.event_timer_add(0.1, window = bpy.context.window)
+        self._iface = BlenderInterface()
+        self._client = imgui.Client(self._iface)
+        self._client.connect("ipc:///tmp/mc_rtc_pub.ipc", "ipc:///tmp/mc_rtc_rep.ipc")
+        self._client.timeout(1.0)
 
     def __del__(self):
         bpy.app.timers.unregister(self.animate_cubes)
@@ -53,21 +61,7 @@ class ImguiExample(Operator,ImguiBasedOperator):
         super().__del__()
 
     def draw(self, context):
-        # This is where you can use any code from pyimgui's doc
-        # see https://pyimgui.readthedocs.io/en/latest/
-        imgui.show_demo_window()
-        imgui.begin("mc_rtc addon", True)
-        #changed, self.color = imgui.color_edit3("Pick a color: Color", *self.color)
-        #changed, self.message = imgui.input_text_multiline(
-        #    'Message:',
-        #    self.message,
-        #    2056
-        #)
-        imgui.text(self.message)
-        #imgui.text_colored(self.message, *self.color)
-        #if imgui.button("POP CUBE"):
-        #    self.calls.append(lambda: self.add_cube())
-        imgui.end()
+        self._client.draw2D()
 
     def add_cube(self):
         bpy.ops.mesh.primitive_cube_add(size = 0.1)
@@ -92,6 +86,8 @@ class ImguiExample(Operator,ImguiBasedOperator):
 
     def modal(self, context, event):
         context.area.tag_redraw()
+
+        self._client.update()
 
         # Handle the event as you wish here, as in any modal operator
         if event.type in {'ESC'}:
