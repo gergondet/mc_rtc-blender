@@ -27,8 +27,9 @@
 import bpy
 from bpy.types import Operator
 
-from .blender_imgui import ImguiBasedOperator
-import imgui
+from .blender_imgui import ImguiBasedOperator, imgui
+
+from math import cos, sin, pi
 
 # -------------------------------------------------------------------
 
@@ -37,21 +38,49 @@ class ImguiExample(Operator,ImguiBasedOperator):
     bl_idname = "object.imgui_example"
     bl_label = "Imgui Example"
 
+    def __init__(self):
+        super().__init__()
+        self.calls = []
+        self.cubes = []
+        self.t = 0.0
+        self.dt = 0.05
+        bpy.app.timers.register(self.animate_cubes)
+        self.timer = bpy.context.window_manager.event_timer_add(0.1, window = bpy.context.window)
+
+    def __del__(self):
+        bpy.app.timers.unregister(self.animate_cubes)
+        bpy.context.window_manager.event_timer_remove(self.timer)
+        super().__del__()
+
     def draw(self, context):
         # This is where you can use any code from pyimgui's doc
         # see https://pyimgui.readthedocs.io/en/latest/
-        imgui.begin("Your first window!", True)
-        imgui.text("Hello world!")
-        imgui.text("Another line!")
-        imgui.text("And yet another")
-        changed, self.color = imgui.color_edit3("Pick a color: Color", *self.color)
-        changed, self.message = imgui.input_text_multiline(
-            'Message:',
-            self.message,
-            2056
-        )
-        imgui.text_colored(self.message, *self.color)
+        imgui.show_demo_window()
+        imgui.begin("mc_rtc addon", True)
+        #changed, self.color = imgui.color_edit3("Pick a color: Color", *self.color)
+        #changed, self.message = imgui.input_text_multiline(
+        #    'Message:',
+        #    self.message,
+        #    2056
+        #)
+        imgui.text(self.message)
+        #imgui.text_colored(self.message, *self.color)
+        #if imgui.button("POP CUBE"):
+        #    self.calls.append(lambda: self.add_cube())
         imgui.end()
+
+    def add_cube(self):
+        bpy.ops.mesh.primitive_cube_add(size = 0.1)
+        self.cubes.append(bpy.context.visible_objects[-1])
+
+    def animate_cubes(self):
+        r = 1.0
+        theta = self.t * 2 * pi
+        for c in self.cubes:
+            c.location = [r*cos(theta), r*sin(theta), 0.0]
+            r += 1.0
+        self.t += self.dt
+        return self.dt
 
     def invoke(self, context, event):
         self.color = (1.,.5,0.)
@@ -71,7 +100,11 @@ class ImguiExample(Operator,ImguiBasedOperator):
             return {'CANCELLED'}
 
         # Don't forget to call parent's modal:
-        if self.modal_imgui(context, event):
+        busy = self.modal_imgui(context, event)
+        for c in self.calls:
+            c()
+        self.calls.clear()
+        if busy:
             return {'RUNNING_MODAL'}
         else:
             return {'PASS_THROUGH'}

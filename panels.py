@@ -33,7 +33,6 @@ from . import operators as ops
 def VIEW3D_MT_show_imgui_example_overlay(self, context):
     col = self.layout.column()
     col.label(text="Other")
-    col.prop(context.scene, 'show_imgui_example_overlay')
     col.operator(ops.ImguiExample.bl_idname)
 
 def register():

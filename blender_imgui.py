@@ -4,16 +4,13 @@ import bgl as gl
 import gpu
 from gpu_extras.batch import batch_for_shader
 
-try:
-    import imgui
-except ModuleNotFoundError:
-    print("ERROR: imgui was not found, run 'python -m pip install imgui' using Blender's Python.")
-from imgui.integrations.base import BaseOpenGLRenderer
-
 import numpy as np
 import ctypes as C
 
-class BlenderImguiRenderer(BaseOpenGLRenderer):
+from . import mc_rtc_blender as imgui
+#import imgui
+
+class BlenderImguiRenderer(object):
     """Integration of ImGui into Blender."""
 
     VERTEX_SHADER_SRC = """
@@ -58,7 +55,13 @@ class BlenderImguiRenderer(BaseOpenGLRenderer):
         self._elements_handle = None
         self._vao_handle = None
 
-        super().__init__()
+        if not imgui.get_current_context():
+            raise RuntimeError("No valid ImGui context. Use imgui.create_context() first")
+        self.io = imgui.get_io()
+        self._font_texture = None
+        self.io.delta_time = 1.0 / 60.0
+        self._create_device_objects()
+        self.refresh_font_texture()
 
     def refresh_font_texture(self):
         # save texture state
@@ -411,14 +414,14 @@ class ImguiBasedOperator:
         io.mouse_down[2] = event.type == 'MIDDLEMOUSE' and event.value == 'PRESS'
 
         if event.type == 'WHEELUPMOUSE':
-            io.mouse_wheel = -1
+            io.mouse_wheel += 1
 
-        elif event.type == 'WHEELUPDOWN':
-            io.mouse_wheel = +1
+        elif event.type == 'WHEELDOWNMOUSE':
+            io.mouse_wheel -= 1
 
-        print(f"ImGui event type={event.type}, unicode={event.unicode} value={event.value}")
-        print(f"io.mouse_pos: {io.mouse_pos}")
-        print(f"io.want_capture_mouse: {io.want_capture_mouse}")
+        #print(f"ImGui event type={event.type}, unicode={event.unicode} value={event.value}")
+        #print(f"io.mouse_pos: {io.mouse_pos}")
+        #print(f"io.want_capture_mouse: {io.want_capture_mouse}")
 
         if event.type in self.key_map:
             if event.value == 'PRESS':

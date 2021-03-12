@@ -1,0 +1,167 @@
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
+
+#include <imgui.h>
+#include <imgui_internal.h>
+
+namespace py = pybind11;
+
+struct ImDrawListProxy
+{
+  int Size;
+  ImDrawList ** Data;
+
+  ImDrawListProxy(ImDrawData & source)
+  : Size(source.CmdListsCount), Data(source.CmdLists)
+  {
+  }
+
+  ImDrawList ** begin()
+  {
+    return Data;
+  }
+
+  ImDrawList ** end()
+  {
+    return Data + Size;
+  }
+};
+
+struct Client
+{
+};
+
+PYBIND11_MODULE(mc_rtc_blender, m)
+{
+    m.doc() = "mc_rtc helper for Blender plugin";
+
+    m.attr("INDEX_SIZE") = sizeof(ImDrawIdx);
+    m.attr("VERTEX_SIZE") = sizeof(ImDrawVert);
+
+    py::enum_<ImGuiKey_>(m, "ImGuiKey", py::arithmetic())
+      .value("KEY_TAB", ImGuiKey_Tab)
+      .value("KEY_LEFT_ARROW", ImGuiKey_LeftArrow)
+      .value("KEY_RIGHT_ARROW", ImGuiKey_RightArrow)
+      .value("KEY_UP_ARROW", ImGuiKey_UpArrow)
+      .value("KEY_DOWN_ARROW", ImGuiKey_DownArrow)
+      .value("KEY_PAGE_UP", ImGuiKey_PageUp)
+      .value("KEY_PAGE_DOWN", ImGuiKey_PageDown)
+      .value("KEY_HOME", ImGuiKey_Home)
+      .value("KEY_END", ImGuiKey_End)
+      .value("KEY_INSERT", ImGuiKey_Insert)
+      .value("KEY_DELETE", ImGuiKey_Delete)
+      .value("KEY_BACKSPACE", ImGuiKey_Backspace)
+      .value("KEY_SPACE", ImGuiKey_Space)
+      .value("KEY_ENTER", ImGuiKey_Enter)
+      .value("KEY_ESCAPE", ImGuiKey_Escape)
+      .value("KEY_A", ImGuiKey_A)
+      .value("KEY_C", ImGuiKey_C)
+      .value("KEY_V", ImGuiKey_V)
+      .value("KEY_X", ImGuiKey_X)
+      .value("KEY_Y", ImGuiKey_Y)
+      .value("KEY_Z", ImGuiKey_Z)
+      .export_values();
+
+    py::class_<ImGuiContext>(m, "ImGuiContext");
+    m.def("create_context", []() { return ImGui::CreateContext(); }, py::return_value_policy::reference);
+    m.def("get_current_context", []() { return ImGui::GetCurrentContext(); }, py::return_value_policy::reference);
+    m.def("destroy_context", &ImGui::DestroyContext);
+
+    py::class_<ImFontAtlas>(m, "ImFontAtlas")
+      .def("clear_tex_data", &ImFontAtlas::ClearTexData)
+      .def("get_tex_data_as_rgba32", [](ImFontAtlas & self) -> std::tuple<int, int, py::bytes> {
+        int width;
+        int height;
+        unsigned char * pixels;
+        self.GetTexDataAsRGBA32(&pixels, &width, &height);
+        return {width, height, py::bytes(reinterpret_cast<char *>(pixels), 4*width*height)};
+      })
+      .def_property("texture_id", [](ImFontAtlas & self) { return uint64_t(self.TexID); }, [](ImFontAtlas & self, uint64_t value) { self.TexID = (void *)(value); });
+
+    py::class_<ImGuiIO>(m, "ImGuiIO")
+      .def_readwrite("delta_time", &ImGuiIO::DeltaTime)
+      .def_property_readonly("key_map", [](py::object & obj) {
+                               ImGuiIO & io = obj.cast<ImGuiIO&>();
+                               return py::array{ImGuiKey_COUNT, io.KeyMap, obj};
+                             })
+      .def_property_readonly("display_fb_scale",
+                             [](ImGuiIO & io) {
+                               return std::array<float, 2>{io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y};
+                             })
+      .def_property("display_size",
+                    [](ImGuiIO & io) {
+                      return std::array<float, 2>{io.DisplaySize.x, io.DisplaySize.y};
+                    },
+                    [](ImGuiIO * self, const std::array<float, 2> & value) {
+                      self->DisplaySize.x = value[0];
+                      self->DisplaySize.y = value[1];
+                    })
+      .def_property_readonly("keys_down", [](py::object & obj) {
+                              ImGuiIO & io = obj.cast<ImGuiIO&>();
+                              return py::array{512, io.KeysDown, obj};
+                             })
+      .def_readwrite("key_ctrl", &ImGuiIO::KeyCtrl)
+      .def_readwrite("key_shift", &ImGuiIO::KeyShift)
+      .def_readwrite("key_alt", &ImGuiIO::KeyAlt)
+      .def_readwrite("key_super", &ImGuiIO::KeySuper)
+      .def_property_readonly("mouse_down", [](py::object & obj) {
+                              ImGuiIO & io = obj.cast<ImGuiIO&>();
+                              return py::array{5, io.MouseDown, obj};
+                             })
+      .def_property("mouse_pos",
+                    [](ImGuiIO & io) {
+                      return std::array<float, 2>{io.MousePos.x, io.MousePos.y};
+                    },
+                    [](ImGuiIO * self, const std::array<float, 2> & value) {
+                      self->MousePos.x = value[0];
+                      self->MousePos.y = value[1];
+                    })
+      .def_readwrite("mouse_wheel", &ImGuiIO::MouseWheel)
+      .def_readwrite("font_global_scale", &ImGuiIO::FontGlobalScale)
+      .def_readwrite("fonts", &ImGuiIO::Fonts, py::return_value_policy::reference)
+      .def_readonly("want_capture_mouse", &ImGuiIO::WantCaptureMouse)
+      .def_readonly("want_capture_keyboard", &ImGuiIO::WantCaptureKeyboard)
+      .def("add_input_character", &ImGuiIO::AddInputCharacter);
+
+    m.def("get_io", &ImGui::GetIO, py::return_value_policy::reference);
+
+    m.def("new_frame", &ImGui::NewFrame);
+    m.def("end_frame", &ImGui::EndFrame);
+    m.def("render", &ImGui::Render);
+
+    py::class_<ImDrawCmd>(m, "ImDrawCmd")
+      .def_property_readonly("clip_rect", [](const ImDrawCmd & s) {
+                                             const auto & r = s.ClipRect;
+                                             return std::array<float, 4>{r.x, r.y, r.z, r.w};
+                                           })
+      .def_property_readonly("texture_id", [](ImDrawCmd & self) { return uint64_t(self.TextureId); })
+      .def_readonly("elem_count", &ImDrawCmd::ElemCount);
+
+    py::class_<ImVector<ImDrawCmd>>(m, "_ImVectorOfImDrawCmd")
+      .def("__len__", [](const ImVector<ImDrawCmd> & self) { return self.Size; })
+      .def("__iter__", [](ImVector<ImDrawCmd> & self) { return py::make_iterator(self.begin(), self.end()); }, py::keep_alive<0, 1>());
+
+    py::class_<ImDrawList>(m, "ImDrawList")
+      .def_property_readonly("idx_buffer_size", [](ImDrawList & self) { return self.IdxBuffer.Size; })
+      .def_property_readonly("idx_buffer_data", [](ImDrawList & self) { return std::uintptr_t(self.IdxBuffer.Data); })
+      .def_property_readonly("vtx_buffer_size", [](ImDrawList & self) { return self.VtxBuffer.Size; })
+      .def_property_readonly("vtx_buffer_data", [](ImDrawList & self) { return std::uintptr_t(self.VtxBuffer.Data); })
+      .def_readonly("commands", &ImDrawList::CmdBuffer);
+
+    py::class_<ImDrawListProxy>(m, "_ImDrawListProxy")
+      .def("__len__", [](const ImDrawListProxy & self) { return self.Size; })
+      .def("__iter__", [](ImDrawListProxy & self) { return py::make_iterator(self.begin(), self.end()); }, py::keep_alive<0, 1>());
+
+
+    py::class_<ImDrawData>(m, "ImDrawData")
+      .def("scale_clip_rects", [](ImDrawData & self, float x, float y) { self.ScaleClipRects({x, y}); })
+      .def_property_readonly("commands_lists", [](ImDrawData & self) { return ImDrawListProxy(self); });
+
+    m.def("get_draw_data", &ImGui::GetDrawData, py::return_value_policy::reference);
+
+    m.def("show_demo_window", []() { ImGui::ShowDemoWindow(); });
+    m.def("begin", [](const char * name, bool open) { return ImGui::Begin(name, &open); });
+    m.def("text", [](const char * label) { return ImGui::Text(label); });
+    m.def("end", &ImGui::End);
+}
