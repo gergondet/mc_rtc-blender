@@ -31,6 +31,8 @@ from .blender_imgui import ImguiBasedOperator, imgui
 
 from math import cos, sin, pi
 
+import os.path
+
 # -------------------------------------------------------------------
 
 class BlenderInterface(imgui.Interface3D):
@@ -48,6 +50,14 @@ class BlenderInterface(imgui.Interface3D):
     def _get_collection(self, name):
         return self._collection.children[name]
 
+    def _new_object_name(self, name):
+        if not name in bpy.data.objects:
+            return name
+        i = 1
+        while "{}.{:03d}".format(name, i) in bpy.data.objects:
+            i += 1
+        return "{}.{:03d}".format(name, i)
+
     def add_collection(self, category, name):
         ncol = bpy.data.collections.new('/'.join(category + [name]))
         self._collection.children.link(ncol)
@@ -60,13 +70,42 @@ class BlenderInterface(imgui.Interface3D):
         bpy.data.collections.remove(self._get_collection(name))
 
     def load_mesh(self, collection, meshPath, meshName):
-        print("Requested loading of {}".format(meshPath))
-        return meshName
+        ext = os.path.splitext(meshPath)[1]
+        if ext.lower() == '.dae':
+            bpy.ops.wm.collada_import(filepath = meshPath, import_units = True)
+        elif ext.lower() == '.stl':
+            bpy.ops.import_mesh.stl(filepath = meshPath, use_scene_unit = True)
+        else:
+            print("Requested loading of {} that I cannot handle (yet)".format(meshPath))
+            return ""
+        [ bpy.data.objects.remove(o) for o in bpy.context.selected_objects if o.type != 'MESH' ]
+        if len(bpy.context.selected_objects) == 0:
+            return ""
+        bpy.context.view_layer.objects.active = bpy.context.selected_objects[0]
+        bpy.ops.object.join()
+        bpy.ops.object.transform_apply()
+        mesh = bpy.context.selected_objects[0]
+        bpy.ops.collection.objects_remove_all()
+        self._get_collection(collection).objects.link(mesh)
+        mesh.name = self._new_object_name(meshName)
+        return mesh.name
 
     def set_mesh_position(self, meshName, pose):
-        pass
+        if meshName == "":
+            return
+        obj = bpy.data.objects[meshName]
+        t = pose.translation
+        obj.location = t
+        r = pose.rotation.inverse()
+        obj.rotation_mode = 'QUATERNION'
+        obj.rotation_quaternion[0] = r.w()
+        obj.rotation_quaternion[1] = r.x()
+        obj.rotation_quaternion[2] = r.y()
+        obj.rotation_quaternion[3] = r.z()
 
     def remove_mesh(self, meshName):
+        if meshName == "":
+            return
         pass
 
 
@@ -82,7 +121,7 @@ class ImguiExample(Operator,ImguiBasedOperator):
         self.t = 0.0
         self.dt = 0.05
         bpy.app.timers.register(self.animate_cubes)
-        self.timer = bpy.context.window_manager.event_timer_add(0.1, window = bpy.context.window)
+        self.timer = bpy.context.window_manager.event_timer_add(1.0 / 60.0, window = bpy.context.window)
         self._iface = BlenderInterface()
         self._client = imgui.Client(self._iface)
         self._client.connect("ipc:///tmp/mc_rtc_pub.ipc", "ipc:///tmp/mc_rtc_rep.ipc")
@@ -98,6 +137,7 @@ class ImguiExample(Operator,ImguiBasedOperator):
 
     def draw(self, context):
         self._client.draw2D()
+        self._client.draw3D()
 
     def add_cube(self):
         bpy.ops.mesh.primitive_cube_add(size = 0.1)

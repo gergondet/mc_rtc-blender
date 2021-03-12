@@ -111,6 +111,13 @@ PYBIND11_MODULE(mc_rtc_blender, m)
     py::class_<Interface3D, BlenderInterface>(m, "Interface3D")
       .def(py::init<>());
 
+    py::class_<Eigen::Quaterniond>(m, "Quaterniond")
+      .def("inverse", [](const Eigen::Quaterniond & q) -> Eigen::Quaterniond { return q.inverse().normalized(); })
+      .def("w", [](const Eigen::Quaterniond & q) { return q.w(); })
+      .def("x", [](const Eigen::Quaterniond & q) { return q.x(); })
+      .def("y", [](const Eigen::Quaterniond & q) { return q.y(); })
+      .def("z", [](const Eigen::Quaterniond & q) { return q.z(); });
+
     py::class_<sva::PTransformd>(m, "PTransformd")
       .def_property_readonly("translation", [](const sva::PTransformd & pt) -> const Eigen::Vector3d & { return pt.translation(); })
       .def_property_readonly("rotation", [](const sva::PTransformd & pt) { return Eigen::Quaterniond(pt.rotation()); });
