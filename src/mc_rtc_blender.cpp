@@ -1,4 +1,6 @@
 #include <pybind11/pybind11.h>
+
+#include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
@@ -33,6 +35,73 @@ struct ImDrawListProxy
 struct BlenderInterface : public Interface3D
 {
   ~BlenderInterface() override = default;
+
+  std::string add_collection(const std::vector<std::string> & category,
+                             const std::string & name) override
+  {
+    PYBIND11_OVERRIDE_PURE(
+        std::string,
+        Interface3D,
+        add_collection,
+        category,
+        name
+    );
+  }
+
+  void hide_collection(const std::string & name,
+                       bool hide) override
+  {
+    PYBIND11_OVERRIDE_PURE(
+        void,
+        Interface3D,
+        hide_collection,
+        name,
+        hide
+    );
+  }
+
+  void remove_collection(const std::string & name) override
+  {
+    PYBIND11_OVERRIDE_PURE(
+        void,
+        Interface3D,
+        remove_collection,
+        name
+    );
+  }
+
+  std::string load_mesh(const std::string & collection, const std::string & meshPath, const std::string & meshName) override
+  {
+    PYBIND11_OVERRIDE_PURE(
+                           std::string,
+                           Interface3D,
+                           load_mesh,
+                           collection,
+                           meshPath,
+                           meshName
+                          );
+  }
+
+  void set_mesh_position(const std::string & meshName, const sva::PTransformd & pose) override
+  {
+    PYBIND11_OVERRIDE_PURE(
+                           void,
+                           Interface3D,
+                           set_mesh_position,
+                           meshName,
+                           pose
+                           );
+  }
+
+  void remove_mesh(const std::string & meshName) override
+  {
+    PYBIND11_OVERRIDE_PURE(
+                           void,
+                           Interface3D,
+                           remove_mesh,
+                           meshName
+                           );
+  }
 };
 
 PYBIND11_MODULE(mc_rtc_blender, m)
@@ -41,6 +110,10 @@ PYBIND11_MODULE(mc_rtc_blender, m)
 
     py::class_<Interface3D, BlenderInterface>(m, "Interface3D")
       .def(py::init<>());
+
+    py::class_<sva::PTransformd>(m, "PTransformd")
+      .def_property_readonly("translation", [](const sva::PTransformd & pt) -> const Eigen::Vector3d & { return pt.translation(); })
+      .def_property_readonly("rotation", [](const sva::PTransformd & pt) { return Eigen::Quaterniond(pt.rotation()); });
 
     py::class_<Client>(m, "Client")
       .def(py::init<Interface3D &>())

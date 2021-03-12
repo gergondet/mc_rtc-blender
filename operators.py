@@ -36,6 +36,39 @@ from math import cos, sin, pi
 class BlenderInterface(imgui.Interface3D):
     def __init__(self):
         super().__init__()
+        if 'mc_rtc' in bpy.data.collections:
+            bpy.data.collections.remove(bpy.data.collections['mc_rtc'])
+        self._collection = bpy.data.collections.new('mc_rtc')
+        bpy.context.scene.collection.children.link(self._collection)
+
+    def __del__(self):
+        super().__del__()
+        bpy.data.collections.remove(self._collection)
+
+    def _get_collection(self, name):
+        return self._collection.children[name]
+
+    def add_collection(self, category, name):
+        ncol = bpy.data.collections.new('/'.join(category + [name]))
+        self._collection.children.link(ncol)
+        return ncol.name
+
+    def hide_collection(self, name, hide):
+        self._get_collection(name).hide_viewport = hide
+
+    def remove_collection(self, name):
+        bpy.data.collections.remove(self._get_collection(name))
+
+    def load_mesh(self, collection, meshPath, meshName):
+        print("Requested loading of {}".format(meshPath))
+        return meshName
+
+    def set_mesh_position(self, meshName, pose):
+        pass
+
+    def remove_mesh(self, meshName):
+        pass
+
 
 class ImguiExample(Operator,ImguiBasedOperator):
     """Example of modal operator using ImGui"""
@@ -56,7 +89,10 @@ class ImguiExample(Operator,ImguiBasedOperator):
         self._client.timeout(1.0)
 
     def __del__(self):
-        bpy.app.timers.unregister(self.animate_cubes)
+        try:
+            bpy.app.timers.unregister(self.animate_cubes)
+        except ValueError:
+            pass
         bpy.context.window_manager.event_timer_remove(self.timer)
         super().__del__()
 

@@ -82,13 +82,24 @@ mc_rbdyn::RobotModulePtr fromParams(const std::vector<std::string> & p)
 
 struct RobotImpl
 {
-  RobotImpl(Robot & robot) : self_(robot)
+  RobotImpl(Robot & robot) :
+    self_(robot),
+    collectionVisual_(gui(), id().category, id().name + "/visual"),
+    collectionCollision_(gui(), id().category, id().name + "/collision")
   {
+    collectionCollision_.hide(true);
   }
+
+  ~RobotImpl() {}
 
   inline mc_rbdyn::Robot & robot()
   {
     return robots_->robot();
+  }
+
+  inline const mc_control::ElementId & id()
+  {
+    return self_.id;
   }
 
   inline Interface3D & gui()
@@ -108,16 +119,21 @@ struct RobotImpl
         return;
       }
       robots_ = mc_rbdyn::loadRobot(*rm);
-      auto loadMeshCallback = [&](std::vector<std::function<void()>> & draws, size_t bIdx,
+      auto loadMeshCallback = [&](std::vector<std::function<void()>> & draws,
+                                  Collection & collection,
+                                  size_t bIdx,
                                   const rbd::parsers::Visual & visual) {
-        const auto & mesh = boost::get<rbd::parsers::Geometry::Mesh>(visual.geometry.data);
-        auto path = convertURI(mesh.filename);
-        //gui().loadMesh(path.string(), *object, group);
-        draws.push_back([this, bIdx, visual]() {
+        const auto & meshInfo = boost::get<rbd::parsers::Geometry::Mesh>(visual.geometry.data);
+        auto path = convertURI(meshInfo.filename);
+        auto mesh = std::make_shared<Mesh>(collection, path.string(), robot().mb().body(bIdx).name());
+        draws.push_back([this, bIdx, visual, mesh]() {
           const auto & X_0_b = visual.origin * robot().bodyPosW()[bIdx];
+          mesh->set_position(X_0_b);
         });
       };
-      auto loadBoxCallback = [&](std::vector<std::function<void()>> & draws, size_t bIdx,
+      auto loadBoxCallback = [&](std::vector<std::function<void()>> & draws,
+                                 Collection & collection,
+                                 size_t bIdx,
                                  const rbd::parsers::Visual & visual) {
         draws.push_back([this, bIdx, visual]() {
           const auto & box = boost::get<rbd::parsers::Geometry::Box>(visual.geometry.data);
@@ -125,7 +141,9 @@ struct RobotImpl
           //gui().drawCube(translation(X_0_b), convert(X_0_b.rotation()), translation(box.size), color(visual.material));
         });
       };
-      auto loadCylinderCallback = [&](std::vector<std::function<void()>> & draws, size_t bIdx,
+      auto loadCylinderCallback = [&](std::vector<std::function<void()>> & draws,
+                                      Collection & collection,
+                                      size_t bIdx,
                                       const rbd::parsers::Visual & visual) {
         draws.push_back([this, bIdx, visual]() {
           const auto & cylinder = boost::get<rbd::parsers::Geometry::Cylinder>(visual.geometry.data);
@@ -136,7 +154,9 @@ struct RobotImpl
           //                color(visual.material));
         });
       };
-      auto loadSphereCallback = [&](std::vector<std::function<void()>> & draws, size_t bIdx,
+      auto loadSphereCallback = [&](std::vector<std::function<void()>> & draws,
+                                    Collection & collection,
+                                    size_t bIdx,
                                     const rbd::parsers::Visual & visual) {
         draws.push_back([this, bIdx, visual]() {
           const auto & sphere = boost::get<rbd::parsers::Geometry::Sphere>(visual.geometry.data);
@@ -144,7 +164,9 @@ struct RobotImpl
           //gui().drawSphere(translation(X_0_b), static_cast<float>(sphere.radius), color(visual.material));
         });
       };
-      auto loadBodyCallbacks = [&](std::vector<std::function<void()>> & draws, size_t bIdx,
+      auto loadBodyCallbacks = [&](std::vector<std::function<void()>> & draws,
+                                   Collection & collection,
+                                   size_t bIdx,
                                    const std::vector<rbd::parsers::Visual> & visuals) {
         for(const auto & visual : visuals)
         {
@@ -152,16 +174,16 @@ struct RobotImpl
           switch(visual.geometry.type)
           {
             case Geometry::MESH:
-              loadMeshCallback(draws, bIdx, visual);
+              loadMeshCallback(draws, collection, bIdx, visual);
               break;
             case Geometry::BOX:
-              loadBoxCallback(draws, bIdx, visual);
+              loadBoxCallback(draws, collection, bIdx, visual);
               break;
             case Geometry::CYLINDER:
-              loadCylinderCallback(draws, bIdx, visual);
+              loadCylinderCallback(draws, collection, bIdx, visual);
               break;
             case Geometry::SPHERE:
-              loadSphereCallback(draws, bIdx, visual);
+              loadSphereCallback(draws, collection, bIdx, visual);
               break;
             default:
               break;
@@ -169,6 +191,7 @@ struct RobotImpl
         }
       };
       auto loadCallbacks = [&](std::vector<std::function<void()>> & draws,
+                               Collection & collection,
                                const std::map<std::string, std::vector<rbd::parsers::Visual>> & visuals) {
         draws.clear();
         const auto & bodies = robot().mb().bodies();
@@ -179,11 +202,11 @@ struct RobotImpl
           {
             continue;
           }
-          loadBodyCallbacks(draws, i, visuals.at(b.name()));
+          loadBodyCallbacks(draws, collection, i, visuals.at(b.name()));
         }
       };
-      loadCallbacks(drawVisual_, robot().module()._visual);
-      loadCallbacks(drawCollision_, robot().module()._collision);
+      loadCallbacks(drawVisual_, collectionVisual_, robot().module()._visual);
+      loadCallbacks(drawCollision_, collectionCollision_, robot().module()._collision);
     }
     robot().posW(posW);
     robot().mbc().q = q;
@@ -199,8 +222,15 @@ struct RobotImpl
     {
       robots_.reset();
     }
-    ImGui::Checkbox(self_.label(fmt::format("Draw {} visual model", self_.id.name)).c_str(), &drawVisualModel_);
-    ImGui::Checkbox(self_.label(fmt::format("Draw {} collision model", self_.id.name)).c_str(), &drawCollisionModel_);
+    if(ImGui::Checkbox(self_.label(fmt::format("Draw {} visual model", self_.id.name)).c_str(), &drawVisualModel_))
+    {
+      collectionVisual_.hide(!drawVisualModel_);
+    }
+
+    if(ImGui::Checkbox(self_.label(fmt::format("Draw {} collision model", self_.id.name)).c_str(), &drawCollisionModel_))
+    {
+      collectionCollision_.hide(!drawCollisionModel_);
+    }
   }
 
   void draw3D()
@@ -232,11 +262,15 @@ private:
   bool drawCollisionModel_ = false;
   std::vector<std::function<void()>> drawVisual_;
   std::vector<std::function<void()>> drawCollision_;
+  Collection collectionVisual_;
+  Collection collectionCollision_;
 };
 
 } // namespace details
 
-Robot::Robot(Client & client, const ElementId & id) : Widget(client, id), impl_(new details::RobotImpl{*this}) {}
+Robot::Robot(Client & client, const ElementId & id) : Widget(client, id), impl_(new details::RobotImpl{*this})
+{
+}
 
 Robot::~Robot() = default;
 
