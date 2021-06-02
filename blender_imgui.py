@@ -347,7 +347,7 @@ class GlobalImgui:
         for k in keys:
             # We don't directly bind Blender's event type identifiers
             # because imgui requires the key_map to contain integers only
-            io.key_map[k] = k
+            io.key_map[int(k)] = k
 
 # -------------------------------------------------------------------
 
