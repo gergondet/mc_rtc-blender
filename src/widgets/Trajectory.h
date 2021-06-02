@@ -2,6 +2,9 @@
 
 #include "Widget.h"
 
+namespace mc_rtc::blender
+{
+
 template<typename T>
 struct Trajectory : public Widget
 {
@@ -26,14 +29,14 @@ struct Trajectory : public Widget
       return;
     }
     /** FIXME Implement */
-    //auto c = convert(config_.color);
-    //for(size_t i = 0; i < points_.size() - 1; ++i)
+    // auto c = convert(config_.color);
+    // for(size_t i = 0; i < points_.size() - 1; ++i)
     //{
     //  const auto & p0 = points_[i];
     //  const auto & p1 = points_[i + 1];
     //  client.gui().drawLine(translation(p0), translation(p1), c);
     //}
-    //if constexpr(std::is_same_v<T, sva::PTransformd>)
+    // if constexpr(std::is_same_v<T, sva::PTransformd>)
     //{
     //  if(points_.size() < 10) // For "small" trajectories, display all points
     //  {
@@ -48,7 +51,7 @@ struct Trajectory : public Widget
     //    client.gui().drawFrame(convert(points_.back()));
     //  }
     //}
-    //else
+    // else
     //{
     //  client.gui().drawCube(translation(points_[0]), {}, {0.04, 0.04, 0.04}, c);
     //  client.gui().drawSphere(translation(points_.back()), 0.04, c);
@@ -59,3 +62,5 @@ private:
   std::vector<T> points_;
   mc_rtc::gui::LineConfig config_;
 };
+
+} // namespace mc_rtc::blender

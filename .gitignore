@@ -1,3 +1,6 @@
 imgui.ini
 __pycache__/
 *.so
+*.pyd
+*.ilk
+*.pdb

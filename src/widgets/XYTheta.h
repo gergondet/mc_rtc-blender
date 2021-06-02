@@ -2,6 +2,9 @@
 
 #include "details/TransformBase.h"
 
+namespace mc_rtc::blender
+{
+
 struct XYTheta : public TransformBase<ControlAxis::XYZTHETA>
 {
   XYTheta(Client & client, const ElementId & id, const ElementId & reqId) : TransformBase(client, id, reqId) {}
@@ -18,3 +21,5 @@ struct XYTheta : public TransformBase<ControlAxis::XYZTHETA>
     // client.gui().drawFrame(convert(marker_.pose()));
   }
 };
+
+} // namespace mc_rtc::blender

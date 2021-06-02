@@ -2,6 +2,9 @@
 
 #include "Widget.h"
 
+namespace mc_rtc::blender
+{
+
 struct Arrow : public Widget
 {
   Arrow(Client & client, const ElementId & id, const ElementId & reqId) : Widget(client, id), requestId_(reqId) {}
@@ -23,3 +26,5 @@ private:
   ElementId requestId_;
   mc_rtc::gui::ArrowConfig config_;
 };
+
+} // namespace mc_rtc::blender

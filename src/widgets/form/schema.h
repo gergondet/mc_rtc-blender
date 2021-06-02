@@ -2,12 +2,12 @@
 
 #include "widgets.h"
 
-namespace form
+namespace mc_rtc::blender::form
 {
 
 struct ArrayForm : public Widget
 {
-  ArrayForm(const ::Widget & parent, const std::string & name, const mc_rtc::Configuration & schema);
+  ArrayForm(const ::mc_rtc::blender::Widget & parent, const std::string & name, const mc_rtc::Configuration & schema);
 
   bool ready() override;
 
@@ -36,7 +36,7 @@ protected:
 
 struct ObjectForm : public Widget
 {
-  ObjectForm(const ::Widget & parent,
+  ObjectForm(const ::mc_rtc::blender::Widget & parent,
              const std::string & name,
              const std::map<std::string, mc_rtc::Configuration> & properties,
              const std::vector<std::string> & required);
@@ -61,4 +61,4 @@ protected:
   std::vector<WidgetPtr> widgets_;
 };
 
-} // namespace form
+} // namespace mc_rtc::blender::form

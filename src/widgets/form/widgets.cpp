@@ -3,10 +3,10 @@
 #include "../Form.h"
 #include "../Schema.h"
 
-namespace form
+namespace mc_rtc::blender::form
 {
 
-ArrayInput::ArrayInput(const ::Widget & parent,
+ArrayInput::ArrayInput(const ::mc_rtc::blender::Widget & parent,
                        const std::string & name,
                        const Eigen::VectorXd & default_,
                        bool fixed_size)
@@ -57,7 +57,7 @@ void ArrayInput::draw()
   ImGui::Columns(1);
 }
 
-ComboInput::ComboInput(const ::Widget & parent,
+ComboInput::ComboInput(const ::mc_rtc::blender::Widget & parent,
                        const std::string & name,
                        const std::vector<std::string> & values,
                        bool send_index)
@@ -100,7 +100,7 @@ void ComboInput::draw(const char * label_)
   }
 }
 
-DataComboInput::DataComboInput(const ::Widget & parent,
+DataComboInput::DataComboInput(const ::mc_rtc::blender::Widget & parent,
                                const std::string & name,
                                const std::vector<std::string> & ref,
                                bool send_index)
@@ -168,4 +168,4 @@ void DataComboInput::draw()
   ComboInput::draw(label_);
 }
 
-} // namespace form
+} // namespace mc_rtc::blender::form

@@ -18,7 +18,8 @@ struct Interface3D
   virtual void remove_collection(const std::string &) = 0;
 
   virtual std::string load_mesh(const std::string & collection,
-                                const std::string & meshPath, const std::string & meshName) = 0;
+                                const std::string & meshPath,
+                                const std::string & meshName) = 0;
 
   virtual void set_mesh_position(const std::string & meshName, const sva::PTransformd & pose) = 0;
 
@@ -27,7 +28,8 @@ struct Interface3D
 
 struct Collection
 {
-  Collection(Interface3D & parent, const std::vector<std::string> & category, const std::string & name) : parent_(parent), collection_(gui().add_collection(category, name))
+  Collection(Interface3D & parent, const std::vector<std::string> & category, const std::string & name)
+  : parent_(parent), collection_(gui().add_collection(category, name))
   {
   }
 
@@ -46,7 +48,10 @@ struct Collection
     return parent_.get();
   }
 
-  const std::string & collection() { return collection_; }
+  const std::string & collection()
+  {
+    return collection_;
+  }
 
 private:
   std::reference_wrapper<Interface3D> parent_;
@@ -79,6 +84,7 @@ struct Mesh
   {
     return collection_.get().gui();
   }
+
 private:
   std::reference_wrapper<Collection> collection_;
   std::string name_;

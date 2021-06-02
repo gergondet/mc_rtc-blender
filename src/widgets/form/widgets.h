@@ -5,12 +5,12 @@
 #include <memory>
 #include <optional>
 
-namespace form
+namespace mc_rtc::blender::form
 {
 
 struct Widget
 {
-  Widget(const ::Widget & parent, const std::string & name) : parent_(parent), name_(name) {}
+  Widget(const ::mc_rtc::blender::Widget & parent, const std::string & name) : parent_(parent), name_(name) {}
 
   virtual ~Widget() = default;
 
@@ -32,7 +32,7 @@ struct Widget
   virtual void collect(mc_rtc::Configuration & out) = 0;
 
   template<typename T = const char *>
-  inline std::string label(std::string_view label, T && suffix = "")
+  inline std::string label(std::string_view label, T suffix = "")
   {
     return fmt::format("{}##{}{}{}{}", label, parent_.id.category, parent_.id.name, name_, suffix);
   }
@@ -54,22 +54,22 @@ struct Widget
 
   bool required;
 
-  inline const ::Widget & parent() const
+  inline const ::mc_rtc::blender::Widget & parent() const
   {
     return parent_;
   }
 
 protected:
-  const ::Widget & parent_;
+  const ::mc_rtc::blender::Widget & parent_;
   std::string name_;
 };
 
 template<typename DataT>
 struct SimpleInput : public Widget
 {
-  SimpleInput(const ::Widget & parent, const std::string & name) : Widget(parent, name) {}
+  SimpleInput(const ::mc_rtc::blender::Widget & parent, const std::string & name) : Widget(parent, name) {}
 
-  SimpleInput(const ::Widget & parent,
+  SimpleInput(const ::mc_rtc::blender::Widget & parent,
               const std::string & name,
               const std::optional<DataT> & value,
               const std::optional<DataT> & temp = std::nullopt)
@@ -203,7 +203,10 @@ private:
 
 struct ArrayInput : public SimpleInput<Eigen::VectorXd>
 {
-  ArrayInput(const ::Widget & parent, const std::string & name, const Eigen::VectorXd & default_, bool fixed_size);
+  ArrayInput(const ::mc_rtc::blender::Widget & parent,
+             const std::string & name,
+             const Eigen::VectorXd & default_,
+             bool fixed_size);
 
   void draw() override;
 
@@ -213,7 +216,7 @@ private:
 
 struct ComboInput : public SimpleInput<std::string>
 {
-  ComboInput(const ::Widget & parent,
+  ComboInput(const ::mc_rtc::blender::Widget & parent,
              const std::string & name,
              const std::vector<std::string> & values,
              bool send_index);
@@ -243,7 +246,7 @@ protected:
 
 struct DataComboInput : public ComboInput
 {
-  DataComboInput(const ::Widget & parent,
+  DataComboInput(const ::mc_rtc::blender::Widget & parent,
                  const std::string & name,
                  const std::vector<std::string> & ref,
                  bool send_index);
@@ -256,4 +259,4 @@ protected:
 
 using WidgetPtr = std::unique_ptr<Widget>;
 
-} // namespace form
+} // namespace mc_rtc::blender::form

@@ -4,6 +4,9 @@
 
 #include "ControlAxis.h"
 
+namespace mc_rtc::blender
+{
+
 template<ControlAxis ctl>
 struct TransformBase : public Widget
 {
@@ -27,3 +30,5 @@ struct TransformBase : public Widget
 protected:
   ElementId requestId_;
 };
+
+} // namespace mc_rtc::blender

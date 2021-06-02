@@ -5,6 +5,9 @@
 #include "Category.h"
 #include "Interface3D.h"
 
+namespace mc_rtc::blender
+{
+
 struct Client : public mc_control::ControllerClient
 {
   Client(Interface3D & gui) : mc_control::ControllerClient{}, gui_(gui) {}
@@ -203,3 +206,5 @@ private:
     }
   }
 };
+
+} // namespace mc_rtc::blender

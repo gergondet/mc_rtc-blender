@@ -2,8 +2,13 @@
 
 #include "Widget.h"
 
+#include <optional>
+
 #include <boost/filesystem.hpp>
 namespace bfs = boost::filesystem;
+
+namespace mc_rtc::blender
+{
 
 struct SchemaForm;
 
@@ -30,3 +35,5 @@ private:
   /** Schema form currently selected */
   std::unique_ptr<SchemaForm> form_;
 };
+
+} // namespace mc_rtc::blender

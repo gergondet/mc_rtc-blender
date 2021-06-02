@@ -24,6 +24,9 @@
 #include "widgets/Transform.h"
 #include "widgets/XYTheta.h"
 
+namespace mc_rtc::blender
+{
+
 void Client::update()
 {
   run(buffer_, t_last_);
@@ -299,3 +302,5 @@ auto Client::getCategory(const std::vector<std::string> & category) -> Category 
   }
   return out.get();
 }
+
+} // namespace mc_rtc::blender

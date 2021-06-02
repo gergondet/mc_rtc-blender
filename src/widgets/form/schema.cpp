@@ -54,10 +54,12 @@ T default_(size_t id, size_t minS, size_t maxS)
 
 } // namespace
 
-namespace form
+namespace mc_rtc::blender::form
 {
 
-ArrayForm::ArrayForm(const ::Widget & parent, const std::string & name, const mc_rtc::Configuration & schema)
+ArrayForm::ArrayForm(const ::mc_rtc::blender::Widget & parent,
+                     const std::string & name,
+                     const mc_rtc::Configuration & schema)
 : Widget(parent, name), schema_(schema)
 {
   if(!schema_.has("items"))
@@ -185,7 +187,7 @@ void ArrayForm::removeWidget(size_t idx)
   widgets_.erase(widgets_.begin() + idx);
 }
 
-ObjectForm::ObjectForm(const ::Widget & parent,
+ObjectForm::ObjectForm(const ::mc_rtc::blender::Widget & parent,
                        const std::string & name,
                        const std::map<std::string, mc_rtc::Configuration> & properties,
                        const std::vector<std::string> & required)
@@ -382,4 +384,4 @@ std::optional<std::string> ObjectForm::value(const std::string & name) const
   return req ? req : value_(widgets_);
 }
 
-} // namespace form
+} // namespace mc_rtc::blender::form

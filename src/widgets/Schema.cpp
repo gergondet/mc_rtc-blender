@@ -4,9 +4,12 @@
 
 #include <mc_rtc/config.h>
 
-namespace details
+namespace mc_rtc::blender
 {
 
+namespace details
+{
+#ifdef __EMSCRIPTEN__
 inline bfs::path current_path()
 {
   auto cwd = get_current_dir_name();
@@ -14,6 +17,7 @@ inline bfs::path current_path()
   free(cwd);
   return out;
 }
+#endif
 
 inline bfs::path canonical(const bfs::path & p)
 {
@@ -116,7 +120,7 @@ void resolveAllOf(mc_rtc::Configuration conf)
 
 struct SchemaForm
 {
-  SchemaForm(const ::Widget & parent, const std::string & name, const mc_rtc::Configuration & schema)
+  SchemaForm(const ::mc_rtc::blender::Widget & parent, const std::string & name, const mc_rtc::Configuration & schema)
   {
     if(!schema.has("properties"))
     {
@@ -252,3 +256,5 @@ mc_rtc::Configuration & Schema::loadSchema(const bfs::path & path)
   resolveAllOf(schema);
   return schema;
 }
+
+} // namespace mc_rtc::blender

@@ -2,6 +2,9 @@
 
 #include "details/TransformBase.h"
 
+namespace mc_rtc::blender
+{
+
 struct Rotation : public TransformBase<ControlAxis::ROTATION>
 {
   Rotation(Client & client, const ElementId & id, const ElementId & reqId) : TransformBase(client, id, reqId) {}
@@ -12,3 +15,5 @@ struct Rotation : public TransformBase<ControlAxis::ROTATION>
     /** FIXME Implement */
   }
 };
+
+} // namespace mc_rtc::blender
