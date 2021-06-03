@@ -17,7 +17,7 @@ namespace mc_rtc::blender
 namespace details
 {
 
-inline bfs::path convertURI(const std::string & uri)
+inline bfs::path convertURI(const mc_rbdyn::RobotModule & rm, const std::string & uri)
 {
   const std::string package = "package://";
   if(uri.size() >= package.size() && uri.find(package) == 0)
@@ -43,7 +43,8 @@ inline bfs::path convertURI(const std::string & uri)
     }
     else
     {
-      mc_rtc::log::critical("Cannot resolve package: {}", pkg);
+      mc_rtc::log::warning("Cannot resolve package: {}, assuming it's {}", pkg, rm.path);
+      pkg = rm.path;
     }
 #  else
     pkg = ros::package::getPath(pkg);
@@ -124,7 +125,7 @@ struct RobotImpl
       auto loadMeshCallback = [&](std::vector<std::function<void()>> & draws, Collection & collection, size_t bIdx,
                                   const rbd::parsers::Visual & visual) {
         const auto & meshInfo = boost::get<rbd::parsers::Geometry::Mesh>(visual.geometry.data);
-        auto path = convertURI(meshInfo.filename);
+        auto path = convertURI(*rm, meshInfo.filename);
         auto mesh = std::make_shared<Mesh>(collection, path.string(), robot().mb().body(bIdx).name());
         draws.push_back([this, bIdx, visual, mesh]() {
           const auto & X_0_b = visual.origin * robot().bodyPosW()[bIdx];
