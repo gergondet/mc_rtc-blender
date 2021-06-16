@@ -109,6 +109,11 @@ struct RobotImpl
     collectionCollision_(gui(), id().category, id().name + "/collision")
   {
     collectionCollision_.hide(true);
+    if(id().category.size() > 1)
+    {
+      drawVisualModel_ = false;
+      collectionVisual_.hide(true);
+    }
   }
 
   ~RobotImpl() {}
