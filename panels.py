@@ -30,13 +30,13 @@ from . import operators as ops
 
 # -------------------------------------------------------------------
 
-def VIEW3D_MT_show_imgui_example_overlay(self, context):
+def VIEW3D_MT_show_mc_rtc_gui_overlay(self, context):
     col = self.layout.column()
     col.label(text="Other")
-    col.operator(ops.ImguiExample.bl_idname)
+    col.operator(ops.McRtcGUI.bl_idname)
 
 def register():
-    VIEW3D_PT_gizmo_display.append(VIEW3D_MT_show_imgui_example_overlay)
+    VIEW3D_PT_gizmo_display.append(VIEW3D_MT_show_mc_rtc_gui_overlay)
 
 def unregister():
-    VIEW3D_PT_gizmo_display.remove(VIEW3D_MT_show_imgui_example_overlay)
+    VIEW3D_PT_gizmo_display.remove(VIEW3D_MT_show_mc_rtc_gui_overlay)

@@ -109,18 +109,13 @@ class BlenderInterface(imgui.Interface3D):
         pass
 
 
-class ImguiExample(Operator,ImguiBasedOperator):
-    """Example of modal operator using ImGui"""
-    bl_idname = "object.imgui_example"
-    bl_label = "Imgui Example"
+class McRtcGUI(Operator,ImguiBasedOperator):
+    """mc_rtc GUI inside Blender"""
+    bl_idname = "object.mc_rtc_gui"
+    bl_label = "mc_rtc GUI"
 
     def __init__(self):
         super().__init__()
-        self.calls = []
-        self.cubes = []
-        self.t = 0.0
-        self.dt = 0.05
-        bpy.app.timers.register(self.animate_cubes)
         self.timer = bpy.context.window_manager.event_timer_add(1.0 / 60.0, window = bpy.context.window)
         self._iface = BlenderInterface()
         self._client = imgui.Client(self._iface)
@@ -128,10 +123,6 @@ class ImguiExample(Operator,ImguiBasedOperator):
         self._client.timeout(1.0)
 
     def __del__(self):
-        try:
-            bpy.app.timers.unregister(self.animate_cubes)
-        except ValueError:
-            pass
         bpy.context.window_manager.event_timer_remove(self.timer)
         super().__del__()
 
@@ -139,22 +130,7 @@ class ImguiExample(Operator,ImguiBasedOperator):
         self._client.draw2D()
         self._client.draw3D()
 
-    def add_cube(self):
-        bpy.ops.mesh.primitive_cube_add(size = 0.1)
-        self.cubes.append(bpy.context.visible_objects[-1])
-
-    def animate_cubes(self):
-        r = 1.0
-        theta = self.t * 2 * pi
-        for c in self.cubes:
-            c.location = [r*cos(theta), r*sin(theta), 0.0]
-            r += 1.0
-        self.t += self.dt
-        return self.dt
-
     def invoke(self, context, event):
-        self.color = (1.,.5,0.)
-        self.message = "Type something here!"
         # Call init_imgui() at the beginning
         self.init_imgui(context)
         context.window_manager.modal_handler_add(self)
@@ -173,9 +149,6 @@ class ImguiExample(Operator,ImguiBasedOperator):
 
         # Don't forget to call parent's modal:
         busy = self.modal_imgui(context, event)
-        for c in self.calls:
-            c()
-        self.calls.clear()
         if busy:
             return {'RUNNING_MODAL'}
         else:
@@ -184,7 +157,7 @@ class ImguiExample(Operator,ImguiBasedOperator):
 # -------------------------------------------------------------------
 
 classes = (
-    ImguiExample,
+    McRtcGUI,
 )
 
 register, unregister = bpy.utils.register_classes_factory(classes)
