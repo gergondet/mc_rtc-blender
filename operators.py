@@ -50,6 +50,20 @@ class BlenderInterface(imgui.Interface3D):
     def _get_collection(self, name):
         return self._collection.children[name]
 
+    def _fix_material(self, mesh, color):
+        if len(mesh.material_slots) == 0:
+            mat = bpy.data.materials.new(name = "{}_material".format(mesh.name))
+            mat.diffuse_color = color
+            bpy.context.view_layer.objects.active = mesh
+            bpy.ops.object.material_slot_add()
+            mesh.material_slots[0].material = mat
+        else:
+            for mat in [m.material for m in mesh.material_slots]:
+                for node in mat.node_tree.nodes:
+                    for i in node.inputs:
+                        if i.name == "Alpha" and i.default_value == 0.0:
+                            i.default_value = 1.0
+
     def _new_object_name(self, name):
         if not name in bpy.data.objects:
             return name
@@ -69,7 +83,7 @@ class BlenderInterface(imgui.Interface3D):
     def remove_collection(self, name):
         bpy.data.collections.remove(self._get_collection(name))
 
-    def load_mesh(self, collection, meshPath, meshName):
+    def load_mesh(self, collection, meshPath, meshName, defaultColor):
         ext = os.path.splitext(meshPath)[1]
         if ext.lower() == '.dae':
             bpy.ops.wm.collada_import(filepath = meshPath, import_units = True)
@@ -88,6 +102,7 @@ class BlenderInterface(imgui.Interface3D):
         bpy.ops.collection.objects_remove_all()
         self._get_collection(collection).objects.link(mesh)
         mesh.name = self._new_object_name(meshName)
+        self._fix_material(mesh, defaultColor)
         return mesh.name
 
     def set_mesh_position(self, meshName, pose):

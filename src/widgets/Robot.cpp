@@ -102,6 +102,16 @@ mc_rbdyn::RobotModulePtr fromParams(const std::vector<std::string> & p)
   return rm;
 }
 
+inline std::array<double, 4> color(const rbd::parsers::Material & m)
+{
+  if(m.type == rbd::parsers::Material::Type::COLOR)
+  {
+    const auto & c = boost::get<rbd::parsers::Material::Color>(m.data);
+    return {c.r, c.g, c.b, c.a};
+  }
+  return {0.8, 0.8, 0.8, 1.0};
+}
+
 struct RobotImpl
 {
   RobotImpl(Robot & robot)
@@ -149,7 +159,7 @@ struct RobotImpl
                                   const rbd::parsers::Visual & visual) {
         const auto & meshInfo = boost::get<rbd::parsers::Geometry::Mesh>(visual.geometry.data);
         auto path = convertURI(*rm, meshInfo.filename);
-        auto mesh = std::make_shared<Mesh>(collection, path.string(), robot().mb().body(bIdx).name());
+        auto mesh = std::make_shared<Mesh>(collection, path.string(), robot().mb().body(bIdx).name(), color(visual.material));
         draws.push_back([this, bIdx, visual, mesh]() {
           const auto & X_0_b = visual.origin * robot().mbc().bodyPosW[bIdx];
           mesh->set_position(X_0_b);

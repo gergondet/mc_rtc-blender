@@ -19,7 +19,8 @@ struct Interface3D
 
   virtual std::string load_mesh(const std::string & collection,
                                 const std::string & meshPath,
-                                const std::string & meshName) = 0;
+                                const std::string & meshName,
+                                const std::array<double, 4> & defaultColor) = 0;
 
   virtual void set_mesh_position(const std::string & meshName, const sva::PTransformd & pose) = 0;
 
@@ -60,8 +61,8 @@ private:
 
 struct Mesh
 {
-  Mesh(Collection & collection, const std::string & meshPath, const std::string & meshName)
-  : collection_(collection), name_(gui().load_mesh(this->collection(), meshPath, meshName))
+  Mesh(Collection & collection, const std::string & meshPath, const std::string & meshName, const std::array<double, 4> & defaultColor)
+  : collection_(collection), name_(gui().load_mesh(this->collection(), meshPath, meshName, defaultColor))
   {
   }
 

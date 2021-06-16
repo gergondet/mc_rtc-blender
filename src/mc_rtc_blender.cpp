@@ -50,9 +50,10 @@ struct BlenderInterface : public Interface3D
 
   std::string load_mesh(const std::string & collection,
                         const std::string & meshPath,
-                        const std::string & meshName) override
+                        const std::string & meshName,
+                        const std::array<double, 4> & defaultColor) override
   {
-    PYBIND11_OVERRIDE_PURE(std::string, Interface3D, load_mesh, collection, meshPath, meshName);
+    PYBIND11_OVERRIDE_PURE(std::string, Interface3D, load_mesh, collection, meshPath, meshName, defaultColor);
   }
 
   void set_mesh_position(const std::string & meshName, const sva::PTransformd & pose) override
