@@ -159,7 +159,8 @@ struct RobotImpl
                                   const rbd::parsers::Visual & visual) {
         const auto & meshInfo = boost::get<rbd::parsers::Geometry::Mesh>(visual.geometry.data);
         auto path = convertURI(*rm, meshInfo.filename);
-        auto mesh = std::make_shared<Mesh>(collection, path.string(), robot().mb().body(bIdx).name(), color(visual.material));
+        auto mesh =
+            std::make_shared<Mesh>(collection, path.string(), robot().mb().body(bIdx).name(), color(visual.material));
         draws.push_back([this, bIdx, visual, mesh]() {
           const auto & X_0_b = visual.origin * robot().mbc().bodyPosW[bIdx];
           mesh->set_position(X_0_b);

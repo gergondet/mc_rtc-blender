@@ -35,6 +35,57 @@ import os.path
 
 # -------------------------------------------------------------------
 
+def new_object_name(name):
+    if not name in bpy.data.objects:
+        return name
+    i = 1
+    while "{}.{:03d}".format(name, i) in bpy.data.objects:
+        i += 1
+    return "{}.{:03d}".format(name, i)
+
+class InteractiveMarker(object):
+    def __init__(self, collection, name, axis, callback):
+        self._collection = collection
+        self._callback = callback
+        self._axis = axis
+        self._ro = None
+        self._position = imgui.PTransformd.Identity()
+
+        bpy.ops.mesh.primitive_uv_sphere_add()
+        self._sphere = bpy.context.selected_objects[0]
+        self._sphere.name = new_object_name("{}_sphere".format(name))
+        self._sphere.scale = [1e-6]*3
+
+        bpy.ops.object.empty_add(type='ARROWS')
+        self._empty = bpy.context.selected_objects[0]
+        self._empty.name = new_object_name("{}_empty".format(name))
+
+        self._sphere.select_set(True)
+        self._empty.select_set(True)
+        bpy.ops.collection.objects_remove_all()
+        self._collection.objects.link(self._sphere)
+        self._collection.objects.link(self._empty)
+
+        bpy.context.view_layer.objects.active = self._sphere
+        self._sphere.select_set(True)
+        self._empty.select_set(True)
+        bpy.ops.object.parent_set()
+    def name(self):
+        return self._sphere.name
+    def _updateConstraints(self, ro):
+        self._ro = ro
+    def update(self, ro, pos):
+        if self._ro != ro:
+            self._updateConstraints(ro)
+        self._position = pos
+        self._sphere.location = pos.translation
+        r = pos.rotation.inverse()
+        self._sphere.rotation_mode = 'QUATERNION'
+        self._sphere.rotation_quaternion[0] = r.w()
+        self._sphere.rotation_quaternion[1] = r.x()
+        self._sphere.rotation_quaternion[2] = r.y()
+        self._sphere.rotation_quaternion[3] = r.z()
+
 class BlenderInterface(imgui.Interface3D):
     def __init__(self):
         super().__init__()
@@ -42,6 +93,7 @@ class BlenderInterface(imgui.Interface3D):
             bpy.data.collections.remove(bpy.data.collections['mc_rtc'])
         self._collection = bpy.data.collections.new('mc_rtc')
         bpy.context.scene.collection.children.link(self._collection)
+        self._markers = {}
 
     def __del__(self):
         super().__del__()
@@ -63,14 +115,6 @@ class BlenderInterface(imgui.Interface3D):
                     for i in node.inputs:
                         if i.name == "Alpha" and i.default_value == 0.0:
                             i.default_value = 1.0
-
-    def _new_object_name(self, name):
-        if not name in bpy.data.objects:
-            return name
-        i = 1
-        while "{}.{:03d}".format(name, i) in bpy.data.objects:
-            i += 1
-        return "{}.{:03d}".format(name, i)
 
     def add_collection(self, category, name):
         ncol = bpy.data.collections.new('/'.join(category + [name]))
@@ -101,7 +145,7 @@ class BlenderInterface(imgui.Interface3D):
         mesh = bpy.context.selected_objects[0]
         bpy.ops.collection.objects_remove_all()
         self._get_collection(collection).objects.link(mesh)
-        mesh.name = self._new_object_name(meshName)
+        mesh.name = new_object_name(meshName)
         self._fix_material(mesh, defaultColor)
         return mesh.name
 
@@ -122,6 +166,23 @@ class BlenderInterface(imgui.Interface3D):
         if meshName == "":
             return
         pass
+
+    def add_interactive_marker(self, category, name, axis, callback):
+        collection = self.add_collection(category, name)
+        marker = InteractiveMarker(self._get_collection(collection), name, axis, callback)
+        self._markers[marker.name()] = marker
+        return marker.name()
+
+    def update_interactive_marker(self, name, ro, pos):
+        if name not in self._markers:
+            return
+        self._markers[name].update(ro, pos)
+
+    def remove_interactive_marker(self, name):
+        if name not in self._markers:
+            return
+        bpy.data.collections.remove(self._markers[name]._collection)
+        del self._markers[name]
 
 
 class McRtcGUI(Operator,ImguiBasedOperator):

@@ -6,6 +6,8 @@
 
 #include <SpaceVecAlg/SpaceVecAlg>
 
+#include "widgets/details/ControlAxis.h"
+
 /** Virtual interface that deals with Blender */
 struct Interface3D
 {
@@ -25,6 +27,15 @@ struct Interface3D
   virtual void set_mesh_position(const std::string & meshName, const sva::PTransformd & pose) = 0;
 
   virtual void remove_mesh(const std::string & meshName) = 0;
+
+  virtual std::string add_interactive_marker(const std::vector<std::string> & category,
+                                             const std::string & name,
+                                             const mc_rtc::blender::ControlAxis & axis,
+                                             const std::function<void(const sva::PTransformd &)> & callback) = 0;
+
+  virtual void update_interactive_marker(const std::string & name, bool ro, const sva::PTransformd & pos) = 0;
+
+  virtual void remove_interactive_marker(const std::string & name) = 0;
 };
 
 struct Collection
@@ -61,7 +72,10 @@ private:
 
 struct Mesh
 {
-  Mesh(Collection & collection, const std::string & meshPath, const std::string & meshName, const std::array<double, 4> & defaultColor)
+  Mesh(Collection & collection,
+       const std::string & meshPath,
+       const std::string & meshName,
+       const std::array<double, 4> & defaultColor)
   : collection_(collection), name_(gui().load_mesh(this->collection(), meshPath, meshName, defaultColor))
   {
   }
