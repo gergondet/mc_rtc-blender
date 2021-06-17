@@ -94,6 +94,8 @@ class BlenderInterface(imgui.Interface3D):
         self._collection = bpy.data.collections.new('mc_rtc')
         bpy.context.scene.collection.children.link(self._collection)
         self._markers = {}
+        # Set some saner default for visualization
+        bpy.context.space_data.shading.color_type = 'TEXTURE'
 
     def __del__(self):
         super().__del__()
