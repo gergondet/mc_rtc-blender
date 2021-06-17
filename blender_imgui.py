@@ -402,11 +402,15 @@ class ImguiBasedOperator:
         # see https://pyimgui.readthedocs.io/en/latest/
         pass
 
-    def modal_imgui(self, context, event):
-        region = context.region
+    def modal_imgui(self, region, event):
         io = imgui.get_io()
 
-        io.mouse_pos = (event.mouse_region_x, region.height - 1 - event.mouse_region_y)
+        # We need to do this because of https://developer.blender.org/T77419
+        # In that case, after we loose the correct context, event.mouse_region_x|y is -1|-1
+        mouse_x = event.mouse_x - region.x
+        mouse_y = event.mouse_y - region.y
+
+        io.mouse_pos = (mouse_x, region.height - 1 - mouse_y)
 
         if event.type == 'LEFTMOUSE':
             io.mouse_down[0] = event.value == 'PRESS'

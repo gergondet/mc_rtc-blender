@@ -192,7 +192,7 @@ class McRtcGUI(Operator,ImguiBasedOperator):
 
     def __init__(self):
         super().__init__()
-        self.timer = bpy.context.window_manager.event_timer_add(1.0 / 60.0, window = bpy.context.window)
+        self._timer = None
         self._iface = BlenderInterface()
         self._client = imgui.Client(self._iface)
         self._client.connect("ipc:///tmp/mc_rtc_pub.ipc", "ipc:///tmp/mc_rtc_rep.ipc")
@@ -210,10 +210,25 @@ class McRtcGUI(Operator,ImguiBasedOperator):
         # Call init_imgui() at the beginning
         self.init_imgui(context)
         context.window_manager.modal_handler_add(self)
+        self._timer = context.window_manager.event_timer_add(1.0 / 60.0, window = context.window)
         return {'RUNNING_MODAL'}
 
+    def cancel(self, context):
+        if self._timer:
+            wm = context.window_manager
+            wm.event_timer_remove(self._timer)
+
     def modal(self, context, event):
-        context.area.tag_redraw()
+        # We need to do this because of https://developer.blender.org/T77419
+        area = context.area
+        if context.area is None:
+            for w in context.window_manager.windows:
+                for a in w.screen.areas:
+                    if a.type == 'VIEW_3D':
+                        area = a
+        if area is None:
+            return {'PASS_THROUGH'}
+        area.tag_redraw()
 
         self._client.update()
 
@@ -224,7 +239,7 @@ class McRtcGUI(Operator,ImguiBasedOperator):
             return {'CANCELLED'}
 
         # Don't forget to call parent's modal:
-        busy = self.modal_imgui(context, event)
+        busy = self.modal_imgui(area.regions[-1], event)
         if busy:
             return {'RUNNING_MODAL'}
         else:
