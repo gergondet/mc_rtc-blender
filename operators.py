@@ -99,6 +99,8 @@ class BlenderInterface(imgui.Interface3D):
         self._markers = {}
         # Set some saner default for visualization
         bpy.context.space_data.shading.color_type = 'TEXTURE'
+        if 'Cube' in bpy.data.objects:
+            bpy.data.objects.remove(bpy.data.objects['Cube'])
 
     def __del__(self):
         super().__del__()
