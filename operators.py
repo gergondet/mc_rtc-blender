@@ -28,6 +28,7 @@ import bpy
 from bpy.types import Operator
 
 from .blender_imgui import ImguiBasedOperator, imgui
+from .interactive_markers import InteractiveMarkers
 
 from math import cos, sin, pi
 
@@ -53,30 +54,28 @@ class InteractiveMarker(object):
 
         bpy.ops.mesh.primitive_uv_sphere_add()
         self._sphere = bpy.context.selected_objects[0]
-        self._sphere.name = new_object_name("{}_sphere".format(name))
+        self._sphere.name = new_object_name("{}_marker".format(name))
         self._sphere.scale = [1e-6]*3
 
-        bpy.ops.object.empty_add(type='ARROWS')
-        self._empty = bpy.context.selected_objects[0]
-        self._empty.name = new_object_name("{}_empty".format(name))
-
         self._sphere.select_set(True)
-        self._empty.select_set(True)
         bpy.ops.collection.objects_remove_all()
         self._collection.objects.link(self._sphere)
-        self._collection.objects.link(self._empty)
 
-        bpy.context.view_layer.objects.active = self._sphere
-        self._sphere.select_set(True)
-        self._empty.select_set(True)
-        bpy.ops.object.parent_set()
+        self._gizmo = InteractiveMarkers.add_marker(self._sphere, self._axis)
     def name(self):
         return self._sphere.name
     def _updateConstraints(self, ro):
         self._ro = ro
+        self._gizmo.read_only(self._ro)
     def update(self, ro, pos):
         if self._ro != ro:
             self._updateConstraints(ro)
+        if self._gizmo.busy():
+            npos = self._gizmo.release_pose()
+            if npos is None:
+                return
+            pos = npos
+            self._callback(pos)
         self._position = pos
         self._sphere.location = pos.translation
         r = pos.rotation.inverse()
@@ -85,6 +84,10 @@ class InteractiveMarker(object):
         self._sphere.rotation_quaternion[1] = r.x()
         self._sphere.rotation_quaternion[2] = r.y()
         self._sphere.rotation_quaternion[3] = r.z()
+        self._gizmo.update(self._sphere.matrix_world.normalized())
+    def remove(self):
+        InteractiveMarkers.remove_marker(self._sphere)
+        bpy.data.collections.remove(self._collection)
 
 class BlenderInterface(imgui.Interface3D):
     def __init__(self):
@@ -183,7 +186,7 @@ class BlenderInterface(imgui.Interface3D):
     def remove_interactive_marker(self, name):
         if name not in self._markers:
             return
-        bpy.data.collections.remove(self._markers[name]._collection)
+        self._markers[name].remove()
         del self._markers[name]
 
 
@@ -233,9 +236,10 @@ class McRtcGUI(Operator,ImguiBasedOperator):
         area.tag_redraw()
 
         self._client.update()
+        InteractiveMarkers.update()
 
         # Handle the event as you wish here, as in any modal operator
-        if event.type in {'ESC'}:
+        if False:
             # Call shutdown_imgui() any time you'll return {'CANCELLED'} or {'FINISHED'}
             self.shutdown_imgui()
             return {'CANCELLED'}
@@ -250,7 +254,8 @@ class McRtcGUI(Operator,ImguiBasedOperator):
 # -------------------------------------------------------------------
 
 classes = (
-    McRtcGUI,
+    InteractiveMarkers,
+    McRtcGUI
 )
 
 register, unregister = bpy.utils.register_classes_factory(classes)

@@ -99,9 +99,18 @@ PYBIND11_MODULE(mc_rtc_blender, m)
       .value("TZ", mc_rtc::blender::ControlAxis::TZ)
       .value("RX", mc_rtc::blender::ControlAxis::RX)
       .value("RY", mc_rtc::blender::ControlAxis::RY)
-      .value("RZ", mc_rtc::blender::ControlAxis::RZ);
+      .value("RZ", mc_rtc::blender::ControlAxis::RZ)
+      .value("TRANSLATION", mc_rtc::blender::ControlAxis::TRANSLATION)
+      .value("ROTATION", mc_rtc::blender::ControlAxis::ROTATION)
+      .value("XYTHETA", mc_rtc::blender::ControlAxis::XYTHETA)
+      .value("XYZTHETA", mc_rtc::blender::ControlAxis::XYZTHETA)
+      .value("ALL", mc_rtc::blender::ControlAxis::ALL)
+      .def("__bool__", [](mc_rtc::blender::ControlAxis ax) { return ax != mc_rtc::blender::ControlAxis::NONE; })
+      .def("__or__", py::overload_cast<mc_rtc::blender::ControlAxis, mc_rtc::blender::ControlAxis>(&mc_rtc::blender::operator|))
+      .def("__and__", py::overload_cast<mc_rtc::blender::ControlAxis, mc_rtc::blender::ControlAxis>(&mc_rtc::blender::operator&));
 
   py::class_<Eigen::Quaterniond>(m, "Quaterniond")
+      .def(py::init<double, double, double, double>())
       .def("inverse", [](const Eigen::Quaterniond & q) -> Eigen::Quaterniond { return q.inverse().normalized(); })
       .def("w", [](const Eigen::Quaterniond & q) { return q.w(); })
       .def("x", [](const Eigen::Quaterniond & q) { return q.x(); })
@@ -110,9 +119,12 @@ PYBIND11_MODULE(mc_rtc_blender, m)
 
   py::class_<sva::PTransformd>(m, "PTransformd")
       .def_static("Identity", &sva::PTransformd::Identity)
-      .def_property_readonly("translation",
-                             [](const sva::PTransformd & pt) -> const Eigen::Vector3d & { return pt.translation(); })
-      .def_property_readonly("rotation", [](const sva::PTransformd & pt) { return Eigen::Quaterniond(pt.rotation()); });
+      .def_property(
+          "translation", [](const sva::PTransformd & pt) -> const Eigen::Vector3d & { return pt.translation(); },
+          [](sva::PTransformd & pt, const Eigen::Vector3d & t) { pt.translation() = t; })
+      .def_property(
+          "rotation", [](const sva::PTransformd & pt) { return Eigen::Quaterniond(pt.rotation()); },
+          [](sva::PTransformd & pt, const Eigen::Quaterniond & q) { pt.rotation() = q.toRotationMatrix(); });
 
   py::class_<mc_rtc::blender::Client>(m, "Client")
       .def(py::init<Interface3D &>())
