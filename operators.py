@@ -32,9 +32,17 @@ from .interactive_markers import InteractiveMarkers
 
 from math import cos, sin, pi
 
+import hashlib
 import os.path
 
 # -------------------------------------------------------------------
+
+def file_hash(filename):
+    sha256 = hashlib.sha256()
+    with open(filename, "rb") as f:
+        for block in iter(lambda: f.read(4096), b""):
+            sha256.update(block)
+    return sha256.hexdigest()
 
 def new_object_name(name):
     if not name in bpy.data.objects:
@@ -96,6 +104,8 @@ class BlenderInterface(imgui.Interface3D):
             bpy.data.collections.remove(bpy.data.collections['mc_rtc'])
         self._collection = bpy.data.collections.new('mc_rtc')
         bpy.context.scene.collection.children.link(self._collection)
+        self._meshes = {}
+        self._meshes_hash = {}
         self._markers = {}
         # Set some saner default for visualization
         bpy.context.space_data.shading.color_type = 'TEXTURE'
@@ -134,7 +144,20 @@ class BlenderInterface(imgui.Interface3D):
     def remove_collection(self, name):
         bpy.data.collections.remove(self._get_collection(name))
 
+    def _copy_mesh(self, collection, meshPath, meshName):
+        mesh = self._meshes[meshPath].copy()
+        bpy.context.view_layer.objects.active = mesh
+        self._get_collection(collection).objects.link(mesh)
+        mesh.name = new_object_name(meshName)
+        return mesh.name
+
     def load_mesh(self, collection, meshPath, meshName, defaultColor):
+        if not os.path.exists(meshPath):
+            return ""
+        mesh_hash = file_hash(meshPath)
+        if meshPath in self._meshes and mesh_hash == self._meshes_hash[meshPath]:
+            return self._copy_mesh(collection, meshPath, meshName)
+        self._meshes_hash[meshPath] = mesh_hash
         ext = os.path.splitext(meshPath)[1]
         if ext.lower() == '.dae':
             bpy.ops.wm.collada_import(filepath = meshPath, import_units = True)
@@ -154,6 +177,7 @@ class BlenderInterface(imgui.Interface3D):
         self._get_collection(collection).objects.link(mesh)
         mesh.name = new_object_name(meshName)
         self._fix_material(mesh, defaultColor)
+        self._meshes[meshPath] = mesh
         return mesh.name
 
     def set_mesh_position(self, meshName, pose):
