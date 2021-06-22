@@ -35,6 +35,8 @@ struct Interface3D
 
   virtual void update_interactive_marker(const std::string & name, bool ro, const sva::PTransformd & pos) = 0;
 
+  virtual void set_marker_hidden(const std::string & name, bool hidden) = 0;
+
   virtual void remove_interactive_marker(const std::string & name) = 0;
 };
 

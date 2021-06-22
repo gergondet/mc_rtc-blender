@@ -96,6 +96,9 @@ class InteractiveMarker(object):
     def remove(self):
         InteractiveMarkers.remove_marker(self._sphere)
         bpy.data.collections.remove(self._collection)
+    def hidden(self, hidden):
+        self._gizmo.hidden(hidden)
+
 
 class BlenderInterface(imgui.Interface3D):
     def __init__(self):
@@ -208,6 +211,11 @@ class BlenderInterface(imgui.Interface3D):
         if name not in self._markers:
             return
         self._markers[name].update(ro, pos)
+
+    def set_marker_hidden(self, name, hidden):
+        if name not in self._markers:
+            return
+        self._markers[name].hidden(hidden)
 
     def remove_interactive_marker(self, name):
         if name not in self._markers:

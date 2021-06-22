@@ -80,6 +80,11 @@ struct BlenderInterface : public Interface3D
     PYBIND11_OVERRIDE_PURE(void, Interface3D, update_interactive_marker, name, ro, pos);
   }
 
+  void set_marker_hidden(const std::string & name, bool hidden) override
+  {
+    PYBIND11_OVERRIDE_PURE(void, Interface3D, set_marker_hidden, name, hidden);
+  }
+
   void remove_interactive_marker(const std::string & name) override
   {
     PYBIND11_OVERRIDE_PURE(void, Interface3D, remove_interactive_marker, name);
@@ -106,8 +111,10 @@ PYBIND11_MODULE(mc_rtc_blender, m)
       .value("XYZTHETA", mc_rtc::blender::ControlAxis::XYZTHETA)
       .value("ALL", mc_rtc::blender::ControlAxis::ALL)
       .def("__bool__", [](mc_rtc::blender::ControlAxis ax) { return ax != mc_rtc::blender::ControlAxis::NONE; })
-      .def("__or__", py::overload_cast<mc_rtc::blender::ControlAxis, mc_rtc::blender::ControlAxis>(&mc_rtc::blender::operator|))
-      .def("__and__", py::overload_cast<mc_rtc::blender::ControlAxis, mc_rtc::blender::ControlAxis>(&mc_rtc::blender::operator&));
+      .def("__or__",
+           py::overload_cast<mc_rtc::blender::ControlAxis, mc_rtc::blender::ControlAxis>(&mc_rtc::blender::operator|))
+      .def("__and__",
+           py::overload_cast<mc_rtc::blender::ControlAxis, mc_rtc::blender::ControlAxis>(&mc_rtc::blender::operator&));
 
   py::class_<Eigen::Quaterniond>(m, "Quaterniond")
       .def(py::init<double, double, double, double>())

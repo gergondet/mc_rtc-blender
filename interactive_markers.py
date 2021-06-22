@@ -55,6 +55,10 @@ class InteractiveMarker:
         for gz in self._gizmos:
             gz.hide_select = ro
 
+    def hidden(self, hidden):
+        for gz in self._gizmos:
+            gz.hide = hidden
+
     def add_translate_gizmo(self, axis, offset = mathutils.Matrix.Identity(4)):
         self._add_gizmo("GIZMO_GT_arrow_3d", "transform.translate", axis, offset)
 

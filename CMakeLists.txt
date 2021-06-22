@@ -50,6 +50,7 @@ set(client_SRC
   src/widgets/form/widgets.h
   src/widgets/form/widgets.cpp
   src/widgets/details/ControlAxis.h
+  src/widgets/details/InteractiveMarker.h
   src/widgets/details/SingleInput.h
   src/widgets/details/TransformBase.h
 )
