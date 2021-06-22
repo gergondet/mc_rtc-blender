@@ -27,6 +27,8 @@
 import bpy
 from bpy.types import Operator
 
+import mathutils
+
 from .blender_imgui import ImguiBasedOperator, imgui
 from .interactive_markers import InteractiveMarkers
 
@@ -99,6 +101,69 @@ class InteractiveMarker(object):
     def hidden(self, hidden):
         self._gizmo.hidden(hidden)
 
+class Arrow(object):
+    def __init__(self, collection):
+        self._collection = collection
+
+        bpy.ops.mesh.primitive_cylinder_add(radius = 1, depth = 1)
+        self._shaft = bpy.context.selected_objects[0]
+        self._shaft.name = new_object_name("arrow_shaft")
+
+        bpy.ops.mesh.primitive_cone_add(radius1 = 1, radius2 = 0, depth = 1)
+        self._head = bpy.context.selected_objects[0]
+        self._head.name = new_object_name("arrow_head")
+
+        self._material = bpy.data.materials.new(name = "{}_material".format(self._shaft.name))
+        bpy.context.view_layer.objects.active = self._shaft
+        bpy.ops.object.material_slot_add()
+        self._shaft.material_slots[0].material = self._material
+        bpy.context.view_layer.objects.active = self._head
+        bpy.ops.object.material_slot_add()
+        self._head.material_slots[0].material = self._material
+
+        self._shaft.select_set(True)
+        self._head.select_set(True)
+        bpy.ops.collection.objects_remove_all()
+        self._collection.objects.link(self._shaft)
+        self._collection.objects.link(self._head)
+        self._shaft.select_set(False)
+        self._head.select_set(False)
+    def __del__(self):
+        bpy.data.collections.remove(self._collection)
+    def name(self):
+        return self._shaft.name
+    def update(self, startIn, endIn, shaft_diam, head_diam, head_len, color):
+        start = mathutils.Vector(startIn)
+        end = mathutils.Vector(endIn)
+        normal = end - start
+        height = normal.length
+        if height != 0:
+            normal = normal / height;
+        if head_len >= height:
+            head_len = height
+        shaft_len = height - head_len
+        theta = normal.angle([0, 0, 1])
+        axis = normal.cross([0, 0, 1])
+        if axis.length < 1e-6:
+            axis = mathutils.Vector([1, 0, 0])
+        axis.normalize()
+        if shaft_len != 0 and shaft_diam != 0:
+            self._shaft.hide_set(False)
+            r = shaft_diam / 2
+            self._shaft.matrix_world = mathutils.Matrix.Translation(start + 0.5 * shaft_len * normal) @ \
+                                       mathutils.Matrix.Rotation(-theta, 4, axis) @ \
+                                       mathutils.Matrix.Diagonal([r, r, shaft_len, 1.0])
+        else:
+            self._shaft.hide_set(True)
+        if head_len != 0 and head_diam != 0:
+            self._head.hide_set(False)
+            r = head_diam / 2
+            self._head.matrix_world = mathutils.Matrix.Translation(start + (shaft_len + 0.5 * head_len) * normal) @ \
+                                      mathutils.Matrix.Rotation(-theta, 4, axis) @ \
+                                      mathutils.Matrix.Diagonal([r, r, head_len, 1.0])
+        else:
+            self._head.hide_set(True)
+        self._material.diffuse_color = color
 
 class BlenderInterface(imgui.Interface3D):
     def __init__(self):
@@ -110,6 +175,7 @@ class BlenderInterface(imgui.Interface3D):
         self._meshes = {}
         self._meshes_hash = {}
         self._markers = {}
+        self._arrows = {}
         # Set some saner default for visualization
         bpy.context.space_data.shading.color_type = 'TEXTURE'
         if 'Cube' in bpy.data.objects:
@@ -222,6 +288,22 @@ class BlenderInterface(imgui.Interface3D):
             return
         self._markers[name].remove()
         del self._markers[name]
+
+    def add_arrow(self, category, name):
+        collection = self.add_collection(category, name)
+        arrow = Arrow(self._get_collection(collection))
+        self._arrows[arrow.name()] = arrow
+        return arrow.name()
+
+    def update_arrow(self, name, start, end, shaft_diam, head_diam, head_len, color):
+        if name not in self._arrows:
+            return
+        self._arrows[name].update(start, end, shaft_diam, head_diam, head_len, color)
+
+    def remove_arrow(self, name):
+        if name not in self._arrows:
+            return
+        del self._arrows[name]
 
 
 class McRtcGUI(Operator,ImguiBasedOperator):

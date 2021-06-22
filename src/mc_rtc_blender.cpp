@@ -89,6 +89,27 @@ struct BlenderInterface : public Interface3D
   {
     PYBIND11_OVERRIDE_PURE(void, Interface3D, remove_interactive_marker, name);
   }
+
+  std::string add_arrow(const std::vector<std::string> & category, const std::string & name) override
+  {
+    PYBIND11_OVERRIDE_PURE(std::string, Interface3D, add_arrow, category, name);
+  }
+
+  void update_arrow(const std::string & name,
+                    const Eigen::Vector3d & start,
+                    const Eigen::Vector3d & end,
+                    double shaft_diam,
+                    double head_diam,
+                    double head_len,
+                    const std::array<double, 4> & color) override
+  {
+    PYBIND11_OVERRIDE_PURE(void, Interface3D, update_arrow, name, start, end, shaft_diam, head_diam, head_len, color);
+  }
+
+  void remove_arrow(const std::string & name) override
+  {
+    PYBIND11_OVERRIDE_PURE(void, Interface3D, remove_arrow, name);
+  }
 };
 
 PYBIND11_MODULE(mc_rtc_blender, m)
