@@ -19,8 +19,6 @@ namespace mc_rtc::blender
 namespace details
 {
 
-static constexpr int MC_RTC_VERSION_MAJOR = mc_rtc::MC_RTC_VERSION[0] - '0';
-
 template<typename T>
 void setConfiguration(T & robot, const std::vector<std::vector<double>> & q)
 {
