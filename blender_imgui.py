@@ -309,7 +309,7 @@ class GlobalImgui:
         region = context.region
         io = imgui.get_io()
         io.display_size = region.width, region.height
-        io.font_global_scale = context.preferences.view.ui_scale
+        io.font_global_scale = context.preferences.system.ui_scale * context.preferences.view.ui_scale
         imgui.new_frame()
 
         for cb, SpaceType in self.callbacks.values():
