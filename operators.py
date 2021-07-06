@@ -215,7 +215,6 @@ class BlenderInterface(imgui.Interface3D):
 
     def _copy_mesh(self, collection, meshPath, meshName):
         mesh = self._meshes[meshPath].copy()
-        bpy.context.view_layer.objects.active = mesh
         self._get_collection(collection).objects.link(mesh)
         mesh.name = new_object_name(meshName)
         return mesh.name
