@@ -319,7 +319,6 @@ class McRtcGUI(Operator,ImguiBasedOperator):
         self._client.timeout(1.0)
 
     def __del__(self):
-        bpy.context.window_manager.event_timer_remove(self.timer)
         super().__del__()
 
     def draw(self, context):
