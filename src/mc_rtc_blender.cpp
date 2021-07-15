@@ -8,7 +8,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-#include "Client.h"
+#include "BlenderClient.h"
 
 namespace py = pybind11;
 
@@ -154,14 +154,14 @@ PYBIND11_MODULE(mc_rtc_blender, m)
           "rotation", [](const sva::PTransformd & pt) { return Eigen::Quaterniond(pt.rotation()); },
           [](sva::PTransformd & pt, const Eigen::Quaterniond & q) { pt.rotation() = q.toRotationMatrix(); });
 
-  py::class_<mc_rtc::blender::Client>(m, "Client")
+  py::class_<mc_rtc::blender::BlenderClient>(m, "Client")
       .def(py::init<Interface3D &>())
-      .def("connect", static_cast<void (mc_rtc::blender::Client::*)(const std::string &, const std::string &)>(
-                          &mc_rtc::blender::Client::connect))
-      .def("timeout", static_cast<void (mc_rtc::blender::Client::*)(double)>(&mc_rtc::blender::Client::timeout))
-      .def("update", &mc_rtc::blender::Client::update)
-      .def("draw2D", &mc_rtc::blender::Client::draw2D)
-      .def("draw3D", &mc_rtc::blender::Client::draw3D);
+      .def("connect", static_cast<void (mc_rtc::blender::BlenderClient::*)(const std::string &, const std::string &)>(
+                          &mc_rtc::blender::BlenderClient::connect))
+      .def("timeout", static_cast<void (mc_rtc::blender::BlenderClient::*)(double)>(&mc_rtc::blender::BlenderClient::timeout))
+      .def("update", &mc_rtc::blender::BlenderClient::update)
+      .def("draw2D", &mc_rtc::blender::BlenderClient::draw2D)
+      .def("draw3D", &mc_rtc::blender::BlenderClient::draw3D);
 
   m.attr("INDEX_SIZE") = sizeof(ImDrawIdx);
   m.attr("VERTEX_SIZE") = sizeof(ImDrawVert);
@@ -263,6 +263,9 @@ PYBIND11_MODULE(mc_rtc_blender, m)
 
   m.def("get_io", &ImGui::GetIO, py::return_value_policy::reference);
 
+  py::class_<ImVec2>(m, "ImVec2")
+    .def(py::init<float, float>());
+
   m.def("new_frame", &ImGui::NewFrame);
   m.def("end_frame", &ImGui::EndFrame);
   m.def("render", &ImGui::Render);
@@ -306,6 +309,6 @@ PYBIND11_MODULE(mc_rtc_blender, m)
 
   m.def("show_demo_window", []() { ImGui::ShowDemoWindow(); });
   m.def("begin", [](const char * name, bool open) { return ImGui::Begin(name, &open); });
-  m.def("text", [](const char * label) { return ImGui::Text(label); });
+  m.def("text", [](const char * label) { return ImGui::Text("%s", label); });
   m.def("end", &ImGui::End);
 }

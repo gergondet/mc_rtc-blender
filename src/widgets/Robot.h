@@ -13,7 +13,7 @@ struct RobotImpl;
 
 struct Robot : public Widget
 {
-  Robot(Client & client, const ElementId & id);
+  Robot(Client & client, const ElementId & id, Interface3D & gui);
 
   ~Robot() override;
 

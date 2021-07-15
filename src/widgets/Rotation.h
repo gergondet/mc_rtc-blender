@@ -7,7 +7,7 @@ namespace mc_rtc::blender
 
 struct Rotation : public TransformBase<ControlAxis::ROTATION>
 {
-  Rotation(Client & client, const ElementId & id, const ElementId & reqId) : TransformBase(client, id, reqId) {}
+  Rotation(Client & client, const ElementId & id, Interface3D & gui, const ElementId & reqId) : TransformBase(client, id, gui, reqId) {}
 
   void draw3D() override
   {

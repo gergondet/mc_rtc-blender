@@ -11,48 +11,29 @@ find_package(mc_rtc REQUIRED)
 
 find_package(Boost REQUIRED COMPONENTS filesystem)
 
+add_subdirectory(src/mc_rtc-imgui)
+
 set(client_SRC
-  src/Category.h
-  src/Category.cpp
-  src/Client.h
-  src/Client.cpp
-  src/Widget.h
-  src/widgets/ArrayInput.h
-  src/widgets/ArrayLabel.h
+  src/BlenderClient.h
+  src/BlenderClient.cpp
   src/widgets/Arrow.h
-  src/widgets/Button.h
-  src/widgets/Checkbox.h
-  src/widgets/ComboInput.h
-  src/widgets/DataComboInput.h
   src/widgets/Force.h
-  src/widgets/Form.h
-  src/widgets/IntegerInput.h
-  src/widgets/Label.h
-  src/widgets/NumberInput.h
-  src/widgets/NumberSlider.h
   src/widgets/Point3D.cpp
   src/widgets/Point3D.h
   src/widgets/Polygon.h
   src/widgets/Robot.cpp
   src/widgets/Robot.h
   src/widgets/Rotation.h
-  src/widgets/Schema.cpp
-  src/widgets/Schema.h
-  src/widgets/StringInput.h
-  src/widgets/Table.h
   src/widgets/Trajectory.h
   src/widgets/Transform.h
   src/widgets/utils.h
   src/widgets/Widget.h
   src/widgets/XYTheta.h
-  src/widgets/form/schema.h
-  src/widgets/form/schema.cpp
-  src/widgets/form/widgets.h
-  src/widgets/form/widgets.cpp
   src/widgets/details/ControlAxis.h
   src/widgets/details/InteractiveMarker.h
-  src/widgets/details/SingleInput.h
   src/widgets/details/TransformBase.h
+  ${mc_rtc-imgui-SRC}
+  ${mc_rtc-imgui-HDR}
 )
 
 set(imgui_SRC

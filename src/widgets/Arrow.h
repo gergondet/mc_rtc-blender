@@ -7,16 +7,17 @@ namespace mc_rtc::blender
 
 struct Arrow : public Widget
 {
-  Arrow(Client & client, const ElementId & id, const ElementId & reqId)
-  : Widget(client, id), requestId_(reqId), arrow_(client.gui(), id.category, id.name),
+  Arrow(Client & client, const ElementId & id, Interface3D & gui, const ElementId & reqId)
+  : Widget(client, id, gui), requestId_(reqId), arrow_(gui, id.category, id.name),
     startMarker_(client,
                  id,
+                 gui,
                  [&client, this](const sva::PTransformd & pos) {
                    Eigen::Vector6d data;
                    data << pos.translation(), end_;
                    client.send_request(requestId_, data);
                  }),
-    endMarker_(client, id, [&client, this](const sva::PTransformd & pos) {
+    endMarker_(client, id, gui, [&client, this](const sva::PTransformd & pos) {
       Eigen::Vector6d data;
       data << start_, pos.translation();
       client.send_request(requestId_, data);

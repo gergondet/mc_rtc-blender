@@ -3,8 +3,8 @@
 namespace mc_rtc::blender
 {
 
-Point3D::Point3D(Client & client, const ElementId & id, const ElementId & requestId)
-: TransformBase(client, id, requestId)
+Point3D::Point3D(Client & client, const ElementId & id, Interface3D & gui, const ElementId & requestId)
+: TransformBase(client, id, gui, requestId)
 {
 }
 

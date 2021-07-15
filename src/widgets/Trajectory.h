@@ -8,7 +8,7 @@ namespace mc_rtc::blender
 template<typename T>
 struct Trajectory : public Widget
 {
-  Trajectory(Client & client, const ElementId & id) : Widget(client, id) {}
+  Trajectory(Client & client, const ElementId & id, Interface3D & gui) : Widget(client, id, gui) {}
 
   void data(const T & point, const mc_rtc::gui::LineConfig & config)
   {

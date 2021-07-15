@@ -8,8 +8,8 @@ namespace mc_rtc::blender
 template<ControlAxis ctl>
 struct TransformBase : public Widget
 {
-  TransformBase(Client & client, const ElementId & id, const ElementId & requestId)
-  : Widget(client, id), requestId_(requestId), marker_(client, id, [&client, this](const sva::PTransformd & pos) {
+  TransformBase(Client & client, const ElementId & id, Interface3D & gui, const ElementId & requestId)
+  : Widget(client, id, gui), requestId_(requestId), marker_(client, id, gui, [&client, this](const sva::PTransformd & pos) {
       if constexpr(ctl == ControlAxis::TRANSLATION)
       {
         client.send_request(requestId_, pos.translation());

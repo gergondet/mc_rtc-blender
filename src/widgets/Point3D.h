@@ -7,7 +7,7 @@ namespace mc_rtc::blender
 
 struct Point3D : public TransformBase<ControlAxis::TRANSLATION>
 {
-  Point3D(Client & client, const ElementId & id, const ElementId & requestId);
+  Point3D(Client & client, const ElementId & id, Interface3D & gui, const ElementId & requestId);
 
   ~Point3D() override = default;
 

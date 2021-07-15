@@ -7,7 +7,7 @@ namespace mc_rtc::blender
 
 struct Polygon : public Widget
 {
-  Polygon(Client & client, const ElementId & id) : Widget(client, id) {}
+  Polygon(Client & client, const ElementId & id, Interface3D & gui) : Widget(client, id, gui) {}
 
   void data(const std::vector<std::vector<Eigen::Vector3d>> & points, const mc_rtc::gui::LineConfig & config)
   {

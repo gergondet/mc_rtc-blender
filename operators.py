@@ -315,14 +315,13 @@ class McRtcGUI(Operator,ImguiBasedOperator):
         self._timer = None
         self._iface = BlenderInterface()
         self._client = imgui.Client(self._iface)
-        self._client.connect("ipc:///tmp/mc_rtc_pub.ipc", "ipc:///tmp/mc_rtc_rep.ipc")
         self._client.timeout(1.0)
 
     def __del__(self):
         super().__del__()
 
     def draw(self, context):
-        self._client.draw2D()
+        self._client.draw2D(imgui.ImVec2(context.region.width, context.region.height))
         self._client.draw3D()
 
     def invoke(self, context, event):

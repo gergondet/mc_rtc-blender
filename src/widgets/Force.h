@@ -7,7 +7,7 @@ namespace mc_rtc::blender
 
 struct Force : public Arrow
 {
-  Force(Client & client, const ElementId & id, const ElementId & reqId) : Arrow(client, id, reqId) {}
+  Force(Client & client, const ElementId & id, Interface3D & gui, const ElementId & reqId) : Arrow(client, id, gui, reqId) {}
 
   void data(const sva::ForceVecd & force, const sva::PTransformd & pose, const mc_rtc::gui::ForceConfig config)
   {

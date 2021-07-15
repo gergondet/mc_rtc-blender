@@ -7,7 +7,7 @@ namespace mc_rtc::blender
 
 struct XYTheta : public TransformBase<ControlAxis::XYZTHETA>
 {
-  XYTheta(Client & client, const ElementId & id, const ElementId & reqId) : TransformBase(client, id, reqId) {}
+  XYTheta(Client & client, const ElementId & id, Interface3D & gui, const ElementId & reqId) : TransformBase(client, id, gui, reqId) {}
 
   void data(bool ro, const Eigen::Vector3d & xytheta, double altitude)
   {

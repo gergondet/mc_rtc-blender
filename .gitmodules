@@ -1,0 +1,3 @@
+[submodule "src/mc_rtc-imgui"]
+	path = src/mc_rtc-imgui
+	url = https://github.com/mc-rtc/mc_rtc-imgui.git
