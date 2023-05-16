@@ -23,14 +23,7 @@ template<typename T>
 void setConfiguration(T & robot, const std::vector<std::vector<double>> & q)
 {
   static_assert(std::is_same_v<T, mc_rbdyn::Robot>);
-  if constexpr(MC_RTC_VERSION_MAJOR > 1)
-  {
-    robot.q()->set(rbd::paramToVector(robot.mb(), q));
-  }
-  else
-  {
-    robot.mbc().q = q;
-  }
+  robot.mbc().q = q;
 }
 
 inline bfs::path convertURI(const mc_rbdyn::RobotModule & rm, const std::string & uri)
